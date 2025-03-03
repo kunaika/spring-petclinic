@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        // Define any environment variables here
-    }
-
     stages {
         stage('Checkout SCM') {
             steps {
@@ -15,23 +11,46 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Use the 'bat' command to run the build on Windows
                     bat 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    bat 'mvn test'
                 }
             }
         }
 
         stage('Jacoco Code Coverage') {
             steps {
-                // This stage is skipped due to earlier failure(s) in the pipeline
-                echo 'Jacoco Code Coverage - Skipped'
+                script {
+                    bat 'mvn jacoco:report'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Customize with your deploy command
+                    bat 'deploy-scripts/deploy.bat'
+                }
             }
         }
     }
 
     post {
+        success {
+            echo 'Build was successful!'
+        }
+        failure {
+            echo 'Build failed.'
+        }
         always {
-            echo 'Pipeline execution completed'
+            echo 'Pipeline execution completed.'
         }
     }
 }
