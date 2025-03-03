@@ -1,56 +1,31 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
+    triggers {
+        cron('H */3 * * 1')  // Trigger every 3 minutes on Mondays
+    }
 
+    stages {
         stage('Build') {
             steps {
                 script {
-                    bat 'mvn clean install'
+                    // Compile and build the artifact
+                    sh './mvnw clean package -DskipTests'
                 }
             }
         }
-
-        stage('Test') {
+        stage('Code Coverage') {
             steps {
                 script {
-                    bat 'mvn test'
+                    // Run tests and generate Jacoco code coverage report
+                    sh './mvnw jacoco:report'
                 }
             }
         }
-
-        stage('Jacoco Code Coverage') {
+        stage('Archive Artifact') {
             steps {
-                script {
-                    bat 'mvn jacoco:report'
-                }
+                archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    // Customize with your deploy command
-                    bat 'deploy-scripts/deploy.bat'
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Build was successful!'
-        }
-        failure {
-            echo 'Build failed.'
-        }
-        always {
-            echo 'Pipeline execution completed.'
         }
     }
 }
